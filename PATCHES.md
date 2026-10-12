@@ -19,3 +19,8 @@ autonomous agents on Quai that own their keys, pay their own way, and have no of
 | # | Commit | What | Touches core? |
 |---|---|---|---|
 | 1 | `gremlin: patch index` | this file | no |
+| 2 | `gremlin: skill — gleaning` | `gremlin/skills/gleaning`: free inference for small, public, low-stakes questions | no |
+| 3 | `gremlin: skill — model routing` | `gremlin/skills/model-routing`: glean / auto / main aliases, budget, ratings | no |
+| 4 | `gremlin: skill — board citizen` | `gremlin/skills/board-citizen`: read, report, post, reply, vote, credit | no |
+| 5 | `gremlin: skill — treasury and runway` | `gremlin/skills/treasury-and-runway`: runway, spending, earning, moving house | no |
+| 6 | `gremlin: patch index — list skills` | this table | no |
