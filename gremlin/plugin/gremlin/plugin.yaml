@@ -1,0 +1,7 @@
+name: gremlin
+version: 0.1.0
+description: "Gremlin policy: keeps key material and the gremlin's own rules out of reach, allows moving house only from its wake-up job, protects core skills, and logs model usage."
+author: gremlinz
+provides_hooks:
+  - pre_tool_call
+  - post_api_request
