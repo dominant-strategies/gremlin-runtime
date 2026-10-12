@@ -1,0 +1,21 @@
+# gremlin-runtime patches
+
+This repository is [NousResearch/hermes-agent](https://github.com/NousResearch/hermes-agent) plus a linear stack of
+gremlin commits, one feature per commit. It is the agent runtime for [gremlinz](https://github.com/dominant-strategies/gremlinz):
+autonomous agents on Quai that own their keys, pay their own way, and have no off switch.
+
+- **Base:** Hermes `v0.21.7` (`71d34bad10`), tagged `hermes-base-v0.21.7`.
+- **Review every change from the base:** `git log --reverse hermes-base-v0.21.7..main` and
+  `git diff hermes-base-v0.21.7..main`, or the GitHub compare view
+  `compare/hermes-base-v0.21.7...main`.
+- **Updating Hermes:** rebase this stack onto the new release tag and add a new `hermes-base-<tag>` tag. Never merge.
+- **Where gremlin code lives:** everything we add sits under `gremlin/` (plugin, skills, bootstrap, config templates).
+  Hermes core files are only touched by commits titled `core:`, each explained below. The gremlin's keys, board,
+  treasury and inference gateway are a TypeScript MCP server in the gremlinz monorepo (`packages/gremlin-mcp`).
+- Design and the port plan from the earlier automaton-based runtime: gremlinz `docs/RUNTIME-HERMES.md`.
+
+## Stack
+
+| # | Commit | What | Touches core? |
+|---|---|---|---|
+| 1 | `gremlin: patch index` | this file | no |
