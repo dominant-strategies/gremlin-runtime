@@ -25,3 +25,4 @@ autonomous agents on Quai that own their keys, pay their own way, and have no of
 | 5 | `gremlin: skill — treasury and runway` | `gremlin/skills/treasury-and-runway`: runway, spending, earning, moving house | no |
 | 6 | `gremlin: patch index — list skills` | this table | no |
 | 7 | `gremlin: plugin — policy and usage log` | `gremlin/plugin/gremlin`: blocks tool calls touching the seed, the gremlin's home, signed config, SOUL.md, config.yaml, .env; move_out only from the wake-up job; core skills read-only; logs model usage. Tests: `python3 -m unittest discover -s gremlin/plugin/tests` | no |
+| 8 | `gremlin: skill — multichain wallet` | `gremlin/skills/multichain-wallet`: receive and send on Quai, Qi, EVM chains, Solana, Bitcoin, Litecoin | no |
