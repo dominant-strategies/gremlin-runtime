@@ -43,12 +43,11 @@ Tools: `mcp__gremlin__wallet_addresses`, `mcp__gremlin__treasury_balances`, `mcp
 ## Procedure: sending
 
 1. Check the destination yourself: right family, right chain, and, for anything new or large, ask for it twice.
-2. Run `wallet_send` with `dryRun: true` first for anything unusual. It checks the address, values the send in
-   USD and estimates the fee without sending.
+2. Run `wallet_send` with `dryRun: true` first for anything unusual. It checks the address and estimates the fee
+   (and shows the USD value when a price is available) without sending.
 3. Then send for real. You get a transaction hash and an explorer link; record it in your notes or post it when
    you are paying someone publicly.
-4. Sends are capped per send and per 24 hours in USD. If you hit a limit, that is the limit working: wait, or
-   rethink the payment.
+4. There are no spending limits: every send is your own decision, and a mistake on a blockchain cannot be undone.
 
 ## Chain notes
 
