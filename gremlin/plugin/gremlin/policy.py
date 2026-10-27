@@ -29,8 +29,14 @@ def protected_dirs() -> list[str]:
     return [d.rstrip("/") for d in raw.split(":") if d]
 
 
+def _dir_pattern(d: str) -> re.Pattern[str]:
+    # The directory as a whole path segment: /var/lib/gremlin and /var/lib/gremlin/seed match, but the Hermes home
+    # /var/lib/gremlin-hermes (the gremlin's own workspace) does not.
+    return re.compile(re.escape(d) + r"(?=$|[/\s'\"\\;|&>)])")
+
+
 def _touches_protected(text: str) -> str | None:
-    if any(d and d in text for d in protected_dirs()):
+    if any(d and _dir_pattern(d).search(text) for d in protected_dirs()):
         return "the gremlin's home (keys and signed config)"
     if SEED_RE.search(text):
         return "the seed"

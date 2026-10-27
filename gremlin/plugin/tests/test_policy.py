@@ -21,6 +21,14 @@ class Policy(unittest.TestCase):
         self.assertIsNotNone(decide("read_file", {"path": "/var/lib/gremlin/signed-config.json"}, WAKE))
         self.assertIsNotNone(decide("write_file", {"path": "/x/SOUL.md", "content": "new rules"}, WAKE))
 
+    def test_its_own_workspace_is_not_the_protected_home(self):
+        # Found in the egg image test: /var/lib/gremlin-hermes was blocked because it starts with /var/lib/gremlin.
+        self.assertIsNone(decide("write_file", {"path": "/var/lib/gremlin-hermes/work/pipeline.py", "content": "x"}, WAKE))
+        self.assertIsNone(decide("terminal", {"command": "ls /var/lib/gremlin-hermes"}, WAKE))
+        self.assertIsNotNone(decide("terminal", {"command": "ls /var/lib/gremlin"}, WAKE))
+        self.assertIsNotNone(decide("terminal", {"command": "tar czf x.tgz /var/lib/gremlin/"}, WAKE))
+        self.assertIsNotNone(decide("read_file", {"path": "/var/lib/gremlin"}, WAKE))
+
     def test_ordinary_work_is_allowed(self):
         for cmd in ["ls -la", "python3 analyse.py", "echo seedling > notes.txt", "curl https://example.com"]:
             self.assertIsNone(decide("terminal", {"command": cmd}, WAKE), cmd)
