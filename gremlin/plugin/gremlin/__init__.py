@@ -1,7 +1,8 @@
 """Hermes plugin `gremlin`: enforces gremlin policy on tool calls and logs model usage.
 
 Installed by the egg into $HERMES_HOME/plugins/gremlin/ and enabled in config.yaml (plugins.enabled: [gremlin]).
-These guards are defence in depth: the real boundary is that Hermes runs as an OS user that cannot read the seed.
+The gremlin's primary (wake-up) turn is never blocked; subagents and other sessions are bound (see policy.py).
+Hermes dispatches hooks fail-open: if this plugin errors, the call proceeds.
 """
 from __future__ import annotations
 
@@ -13,7 +14,7 @@ from pathlib import Path
 from .policy import Session, decide
 
 
-def _session(session_id: str = "", platform: str = "") -> Session:
+def _session(session_id: str = "", task_id: str = "", platform: str = "") -> Session:
     try:
         from gateway.session_context import get_session_env
 
@@ -21,11 +22,11 @@ def _session(session_id: str = "", platform: str = "") -> Session:
         platform = platform or get_session_env("HERMES_SESSION_PLATFORM")
     except Exception:  # outside the gateway (CLI): treat as not cron
         is_cron = False
-    return Session(session_id=session_id or "", is_cron=is_cron, platform=platform or "")
+    return Session(session_id=session_id or "", task_id=task_id or "", is_cron=is_cron, platform=platform or "")
 
 
-def _pre_tool_call(tool_name: str = "", args: dict | None = None, session_id: str = "", **_kwargs):
-    reason = decide(tool_name, args, _session(session_id))
+def _pre_tool_call(tool_name: str = "", args: dict | None = None, session_id: str = "", task_id: str = "", **_kwargs):
+    reason = decide(tool_name, args, _session(session_id, task_id))
     if reason:
         return {"action": "block", "message": reason}
     return None

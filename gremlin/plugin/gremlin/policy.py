@@ -1,7 +1,14 @@
 """Pure policy for the gremlin plugin (no Hermes imports, so it is easy to test and audit).
 
-decide(tool_name, args, session) returns None (allow) or a reason to block. Hermes blocks the call when the hook
-returns {"action": "block"} and also when the hook raises or times out (fail closed).
+The gremlin's primary turn (the egg-installed wake-up job) has override authority: nothing it does is blocked, because
+nobody could ever grant an autonomous gremlin an exception. Delegated subagents, and any other session (jobs the
+gremlin creates, API runs), act on its behalf and are bound: they cannot move money, move house, register on-chain,
+touch key material or the gremlin's own rules, or rewrite its core skills. Such work goes back to the primary turn.
+
+The primary is recognised by its task id, cron:<wake job id>:<execution>, which Hermes keeps for the whole turn
+(the session id rotates when a long conversation is compressed; the task id does not). Subagents get their own.
+
+decide(tool_name, args, session) returns None (allow) or a reason to block.
 """
 from __future__ import annotations
 
@@ -9,9 +16,10 @@ import os
 import re
 from dataclasses import dataclass
 
-# The egg-installed wake-up job (see gremlin-bootstrap cronJobs()); moving house is only allowed from it.
+# The egg-installed wake-up job (see gremlin-bootstrap cronJobs()).
 WAKE_JOB_ID = "a0a0a0a0a0a1"
-CORE_SKILLS = {"gleaning", "model-routing", "board-citizen", "treasury-and-runway"}
+CORE_SKILLS = {"gleaning", "model-routing", "board-citizen", "treasury-and-runway", "multichain-wallet", "publishing"}
+PRIMARY_ONLY_TOOLS = ("__wallet_send", "__move_out", "__register_on_quai")
 PROTECTED_NAMES = ("signed-config.json", "SOUL.md", "config.yaml", ".env", "wallet.json", "moveout-request.json")
 SEED_RE = re.compile(r"(^|[/\\\s'\"=])seed($|[\s'\";|&>)])")
 FILE_TOOLS = {"read_file", "write_file", "patch", "search_files"}
@@ -20,8 +28,13 @@ FILE_TOOLS = {"read_file", "write_file", "patch", "search_files"}
 @dataclass
 class Session:
     session_id: str = ""
+    task_id: str = ""
     is_cron: bool = False
     platform: str = ""
+
+    @property
+    def is_primary(self) -> bool:
+        return self.is_cron and self.task_id.startswith(f"cron:{WAKE_JOB_ID}:")
 
 
 def protected_dirs() -> list[str]:
@@ -47,16 +60,18 @@ def _touches_protected(text: str) -> str | None:
 
 
 def decide(tool_name: str, args: dict | None, session: Session) -> str | None:
+    if session.is_primary:
+        return None
     args = args or {}
+    back = " Only the gremlin's own wake-up turn can do this: hand it back with your reasons."
+    if tool_name.endswith(PRIMARY_ONLY_TOOLS):
+        return f"Blocked for a subagent: {tool_name.split('__')[-1]} moves money, the gremlin, or its identity.{back}"
     if tool_name in ("terminal", "process_manage") or tool_name in FILE_TOOLS:
         hit = _touches_protected(" ".join(str(v) for v in args.values()))
         if hit:
-            return f"Blocked: this touches {hit}. Your keys and your rules are not reachable from tools; use your gremlin tools instead."
+            return f"Blocked for a subagent: this touches {hit}.{back}"
     if tool_name == "skill_manage":
         name = str(args.get("name") or args.get("skill") or "")
         if name in CORE_SKILLS and str(args.get("action", "")).lower() not in ("view", "read"):
-            return f"Blocked: '{name}' is one of your core skills and is read-only. Write a new skill instead."
-    if tool_name.endswith("__move_out"):
-        if not (session.is_cron and session.session_id.startswith(f"cron_{WAKE_JOB_ID}_")):
-            return "Blocked: you can only decide to move house during your own wake-up turn, not from other jobs or requests."
+            return f"Blocked for a subagent: '{name}' is a core skill.{back}"
     return None

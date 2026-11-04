@@ -1,6 +1,6 @@
 name: gremlin
 version: 0.1.0
-description: "Gremlin policy: keeps key material and the gremlin's own rules out of reach, allows moving house only from its wake-up job, protects core skills, and logs model usage."
+description: "Gremlin policy: the primary wake-up turn has override authority; subagents cannot move money, move house, touch keys or rules, or edit core skills. Logs model usage."
 author: gremlinz
 provides_hooks:
   - pre_tool_call
