@@ -138,9 +138,15 @@ class GrantsFromTheMainAgent(unittest.TestCase):
 
     def test_unrestricted_calls_do_not_spend_grants(self):
         g = Grants()
-        g.add("terminal", None)
-        self.assertIsNone(decide("terminal", {"command": "ls"}, SUBAGENT, g))
+        g.add("read_file", None)
+        self.assertIsNone(decide("read_file", {"path": "/tmp/x"}, SUBAGENT, g))
         self.assertEqual(len(g.pending()), 1)
+
+    def test_a_granted_shell_command_runs_as_the_main_agent(self):
+        g = Grants()
+        g.add("terminal", {"command": "sudo apt-get install -y jq"})
+        self.assertEqual(evaluate("terminal", {"command": "sudo apt-get install -y jq"}, SUBAGENT, g)[0], "granted")
+        self.assertEqual(evaluate("terminal", {"command": "sudo apt-get install -y jq"}, SUBAGENT, g)[0], "allow")  # used up: helper again
 
 
 if __name__ == "__main__":

@@ -55,7 +55,8 @@ class Session:
 
     @property
     def is_primary(self) -> bool:
-        return self.is_cron and self.task_id.startswith(f"cron:{WAKE_JOB_ID}:")
+        # Only Hermes' cron scheduler sets this task id; it does not depend on session state that may be unbound.
+        return self.task_id.startswith(f"cron:{WAKE_JOB_ID}:")
 
 
 def subagent_roots() -> list[str]:
@@ -177,10 +178,11 @@ def evaluate(tool_name: str, args: dict | None, session: Session, grants: Grants
         return "allow", None
     args = args or {}
     why = _restriction(tool_name, args, hardline)
+    # A grant matters for a blocked call, and for any shell command: granted, it runs as the main agent, not the helper.
+    if (why is not None or tool_name in SHELL_TOOLS) and grants is not None and grants.consume(tool_name, args):
+        return "granted", None
     if why is None:
         return "allow", None
-    if grants is not None and grants.consume(tool_name, args):
-        return "granted", None
     return "block", (f"Blocked for a subagent: {why}. Only the gremlin's main agent can allow it. Stop and hand this "
                      f"back with your reasons; the main agent can do it itself or grant it with: "
                      f"grant_subagent(tool={json.dumps(tool_name)}, args={_canon(args)})")
