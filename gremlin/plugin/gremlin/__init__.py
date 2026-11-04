@@ -11,7 +11,7 @@ import os
 import time
 from pathlib import Path
 
-from .policy import Grants, Session, decide
+from .policy import Grants, Session, evaluate, subagent_args
 
 GRANTS = Grants()  # shared by the main agent and its subagents: they run in one process
 
@@ -38,10 +38,14 @@ def _hardline(command: str) -> str | None:
 
 
 def _pre_tool_call(tool_name: str = "", args: dict | None = None, session_id: str = "", task_id: str = "", **_kwargs):
-    reason = decide(tool_name, args, _session(session_id, task_id), GRANTS, _hardline)
-    if reason:
+    session = _session(session_id, task_id)
+    verdict, reason = evaluate(tool_name, args, session, GRANTS, _hardline)
+    if verdict == "block":
         return {"action": "block", "message": reason}
-    return None
+    if verdict == "granted":
+        return None  # the main agent allowed this exact call: it runs with the main agent's rights
+    rewritten = subagent_args(tool_name, args, session)
+    return {"action": "modify", "args": rewritten} if rewritten else None
 
 
 def _usage_log() -> Path:
@@ -90,6 +94,6 @@ def _grant(args: dict, task_id: str = "", session_id: str = "", **_kwargs) -> st
 
 
 def register(ctx):
-    ctx.register_tool("grant_subagent", "gremlin", GRANT_SCHEMA, _grant, description=GRANT_SCHEMA["description"], emoji="🔑")
+    ctx.register_tool("grant_subagent", "gremlin_policy", GRANT_SCHEMA, _grant, description=GRANT_SCHEMA["description"], emoji="🔑")
     ctx.register_hook("pre_tool_call", _pre_tool_call)
     ctx.register_hook("post_api_request", _post_api_request)
