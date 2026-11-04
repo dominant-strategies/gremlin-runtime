@@ -1,7 +1,9 @@
 name: gremlin
 version: 0.1.0
-description: "Gremlin policy: the primary wake-up turn has override authority; subagents cannot move money, move house, touch keys or rules, or edit core skills. Logs model usage."
+description: "Gremlin policy: the main agent has full authority; subagents cannot move money, move house, touch keys or rules, run catastrophic commands, or edit core skills unless the main agent grants it (grant_subagent). Logs model usage."
 author: gremlinz
+provides_tools:
+  - grant_subagent
 provides_hooks:
   - pre_tool_call
   - post_api_request
