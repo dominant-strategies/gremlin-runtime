@@ -1193,6 +1193,15 @@ def _consume_interrupted_flag(job_id: str, token: Optional[object] = None) -> bo
         return hit
 
 
+def _is_retryable_failure(job: dict, exc: BaseException, agent: Any) -> bool:
+    """Flag for the bounded re-run ladder (cron/unreachable_retry.py): a failure that never reached
+    the model, or any failure of a job with ``retry_failures: true`` (a recurring job that is safe
+    to re-run after a partial run because it re-reads its own state)."""
+    from cron.unreachable_retry import is_model_unreachable_failure
+
+    return is_model_unreachable_failure(exc, agent) or job.get("retry_failures") is True
+
+
 def _cron_inactivity_seconds() -> float:
     """Parse HERMES_CRON_TIMEOUT (seconds). 0 = unlimited; bad input = 600. Shared by the
     inactivity monitor and the cwd-lock bound so they can't drift: the lock bound must stay >= the
@@ -2612,8 +2621,7 @@ def run_job(
         # the model was never reached (transient network/DNS, zero API calls) so the bookkeeping
         # tail can schedule a bounded automatic re-run instead of waiting a full period.
         try:
-            from cron.unreachable_retry import is_model_unreachable_failure
-            if is_model_unreachable_failure(e, agent):
+            if _is_retryable_failure(job, e, agent):
                 job["_model_unreachable"] = True
             # Provider usage window closed for a known duration (cron/quota_hold.py): flag it so the
             # bookkeeping tail parks the job past the window instead of re-firing into it (#89376).

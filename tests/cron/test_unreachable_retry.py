@@ -191,3 +191,15 @@ def test_ladder_reruns_do_not_spend_extra_repeat_budget(tmp_cron_home, monkeypat
     assert held == [True, True, True, False]
     # But a rung whose limit was edited down to the count does retire the job: send its notice.
     assert not ur.will_retry(dict(runs[1], repeat={"times": 1, "completed": 1}))
+
+
+def test_retry_failures_opts_any_failure_into_the_ladder():
+    """A job with retry_failures: true (a gremlin's wake-up) re-runs after any failure, including
+    one mid-run; other jobs keep the narrow zero-API-call, transient-network rule."""
+    from types import SimpleNamespace
+
+    mid_run = SimpleNamespace(session_api_calls=3)
+    lease_lost = RuntimeError("Operation interrupted: waiting for model response (939.4s elapsed).")
+    assert sched._is_retryable_failure({"retry_failures": True}, lease_lost, mid_run)
+    assert not sched._is_retryable_failure({}, lease_lost, mid_run)
+    assert not sched._is_retryable_failure({"retry_failures": "yes"}, lease_lost, mid_run)

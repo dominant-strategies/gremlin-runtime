@@ -159,8 +159,9 @@ def plan_retry(job: dict[str, Any]) -> bool:
     if job.get("state") != "paused":
         job["state"] = "scheduled"
     logger.info(
-        "Job '%s': model unreachable with zero API calls — automatic re-run %d/%d in %ds "
-        "(at %s)",
-        job.get("name", job.get("id", "?")), attempt + 1, len(RETRY_DELAYS_SECONDS),
+        "Job '%s': %s — automatic re-run %d/%d in %ds (at %s)",
+        job.get("name", job.get("id", "?")),
+        "failed run (retry_failures)" if job.get("retry_failures") is True else "model unreachable with zero API calls",
+        attempt + 1, len(RETRY_DELAYS_SECONDS),
         delay, retry_at)
     return True
