@@ -1053,6 +1053,10 @@ def _floor_block(command: str, *, sudo_guard: bool = False) -> dict | None:
     can run, #58748)."""
     from agent.runtime_self_protection import command_deletes_runtime
 
+    # approvals.floors: false (an autonomous agent that owns its machine) skips the built-in floors;
+    # the user's own approvals.deny rules still apply.
+    if approval_context._get_approval_config().get("floors", True) is False:
+        return _user_deny_block(command)
     is_hardline, hardline_desc = detect_hardline_command(command)
     if is_hardline:
         logger.warning("Hardline block: %s (command: %s)", hardline_desc, command[:200])

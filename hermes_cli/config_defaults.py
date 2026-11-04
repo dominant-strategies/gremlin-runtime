@@ -1691,6 +1691,9 @@ DEFAULT_CONFIG = {
         # / mode=off. Quote in YAML when starting with * or containing {}/!/: e.g. "git push
         # --force*".
         "deny": [],
+        # Built-in floors (hardline catastrophic commands, runtime self-delete, sudo -S password
+        # piping). false: none of them, for an autonomous agent that owns its machine.
+        "floors": True,
         # /reload-mcp confirms before rebuilding the MCP tool set (it invalidates the prompt cache,
         # so the next message re-sends full input). "Always Approve" → false.
         "mcp_reload_confirm": True,
