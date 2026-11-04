@@ -87,6 +87,7 @@ class HardLimits(unittest.TestCase):
         a = subagent_args("terminal", {"command": "echo 'hi' > out.txt"}, SUBAGENT)
         self.assertTrue(a["command"].startswith(f"sudo -n -u {HELPER_USER} -H -- bash -c "))
         self.assertIn("echo", a["command"])
+        self.assertIn("umask 007;", a["command"])
         self.assertEqual(a["workdir"], os.path.realpath("/var/lib/gremlin-hermes/work"))
         self.assertEqual(subagent_args("terminal", {"command": "ls", "workdir": "/root"}, SUBAGENT)["workdir"],
                          os.path.realpath("/var/lib/gremlin-hermes/work"))

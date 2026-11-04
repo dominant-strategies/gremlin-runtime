@@ -80,7 +80,8 @@ def subagent_args(tool_name: str, args: dict | None, session: Session) -> dict |
     workdir = str(args.get("workdir") or "")
     if not workdir or not _inside_roots(workdir):
         workdir = subagent_roots()[0]
-    inner = f"cd {shlex.quote(workdir)} && {args.get('command') or ''}"
+    # umask 007: what the helper makes in the shared work folder stays readable and writable by the main agent.
+    inner = f"umask 007; cd {shlex.quote(workdir)} && {args.get('command') or ''}"
     return {"command": f"sudo -n -u {HELPER_USER} -H -- bash -c {shlex.quote(inner)}", "workdir": workdir}
 
 
