@@ -190,6 +190,24 @@ class DurableTurnLease:
             if agent._execution_thread_id is not None:
                 _set_interrupt(False, agent._execution_thread_id)
 
+    def _late_renewal(self, started: float):
+        try:
+            renewed = self.db.refresh_session_turn_lease(
+                self._current_session_id(), self.holder, ttl_seconds=LEASE_TTL_SECONDS,
+                patience_s=_REFRESH_WRITE_PATIENCE_S)
+        except Exception as exc:
+            logger.warning("Late session turn lease renewal failed (%s): %s", exc, self._current_session_id())
+            renewed = False
+        if self.stop.is_set():
+            return False
+        if renewed:
+            logger.warning("Session turn lease renewed late (process was suspended %.0fs past its expiry); "
+                           "still the holder, continuing: %s", started - self._authority_deadline,
+                           self._current_session_id())
+            self._authority_deadline = started + LEASE_TTL_SECONDS
+            return None
+        return self._stop_on_exhausted_authority()
+
     def _stop_on_exhausted_authority(self) -> bool:
         """State.db stayed locked until no renewal can land before the row expires: stop now."""
         logger.warning("Session turn lease refresh stayed locked through its lifetime: %s", self._current_session_id())
@@ -218,7 +236,10 @@ class DurableTurnLease:
         # margin covers one BEGIN IMMEDIATE that blocks in SQLite's busy handler past the patience.
         patience = self._authority_deadline - _REFRESH_EXPIRY_MARGIN_S - started
         if patience <= 0:
-            return self._stop_on_exhausted_authority()
+            # Late tick: the process (or its VM, or the machine) was suspended past the expiry, or
+            # renewals stayed locked. Try once: the holder-qualified UPDATE still lands only if no
+            # successor reclaimed the row, in which case this turn never lost exclusivity.
+            return self._late_renewal(started)
         try:
             if self.db.refresh_session_turn_lease(
                 self._current_session_id(), self.holder, ttl_seconds=LEASE_TTL_SECONDS,
