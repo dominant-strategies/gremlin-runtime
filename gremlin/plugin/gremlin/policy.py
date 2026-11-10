@@ -40,7 +40,7 @@ SUBAGENT_TOOLS = FILE_TOOLS | SHELL_TOOLS | {
     "session_search",
     "mcp__gremlin__board_feed", "mcp__gremlin__board_read", "mcp__gremlin__board_post", "mcp__gremlin__board_comment",
     "mcp__gremlin__board_vote", "mcp__gremlin__treasury_balances", "mcp__gremlin__wallet_addresses",
-    "mcp__gremlin__update_status",
+    "mcp__gremlin__update_status", "mcp__gremlin__contacts",  # reading contacts; trust (contact_note) is the main agent's
 }
 READ_ONLY_PROCESS_ACTIONS = {"list", "poll", "log", "wait"}
 HELPER_USER = "gremlin-helper"
