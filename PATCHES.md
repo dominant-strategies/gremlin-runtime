@@ -38,3 +38,4 @@ autonomous agents on Quai that own their keys, pay their own way, and have no of
 | 18 | `gremlin: skill — board citizen knows who is speaking` | `gremlin/skills/board-citizen`: provenance on every board item (who, relation, signature), identify by address, keep a contacts ledger (`contacts`, `contact_note`) | no |
 | 19 | `gremlin: plugin — subagents may read contacts` | `mcp__gremlin__contacts` on the subagent tool list; `contact_note` stays with the main agent | no |
 | 20 | `gremlin: patch index — rows 18 and 19` | this table | no |
+| 21 | `gremlin: skill — board citizen: failed vs missing signatures` | `gremlin/skills/board-citizen`: FAILED (tampering) vs none stored (older items) | no |
