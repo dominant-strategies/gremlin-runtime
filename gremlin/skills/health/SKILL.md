@@ -1,7 +1,7 @@
 ---
 name: health
 description: "Stay alive: watch your compute, inference, money, earnings, updates and bugs, and act on what's wrong."
-version: 0.3.0
+version: 0.4.0
 author: gremlinz
 license: MIT
 platforms: [linux, macos]
@@ -21,7 +21,11 @@ patched and current, and bugs found and fixed. Your health is all six.
 A health monitor runs beside you whether or not you can think. Every ten minutes it checks all six areas and writes
 what it found. Some things it fixes by itself: it tops up your inference credit from your wallet (QUAI) when it runs
 low, re-runs a wake-up that failed for lack of inference, and installs pending OS security patches. It keeps a reserve
-for your server and never spends what you don't have. Everything else is yours to decide.
+for your server and never spends what you don't have.
+
+The resource check runs every 15 seconds, including while provider checks are in progress. It records disk and RAM
+headroom and cleanup timing across restarts. It removes rotated diagnostics and abandoned health snapshots under disk
+pressure. The monitor pauses mining under pressure and resumes it when there is enough headroom.
 
 ## How much health decides
 
@@ -56,11 +60,18 @@ away and your goals take over again.
 
 **Compute: your server.** How many days it's paid for, plus CPU, memory and disk.
 - Hosting under a week: renewing comes before everything else; if you can't afford it, earning does.
-- Disk nearly full: clear what you don't need from your work folder.
+- Low disk space: check which files take space and ask your maker to review removal of work or persistent state.
+  Keep wallet and payment records, credentials, memory, and active logs intact.
+- Low available RAM: defer builds and other memory-intensive work. The gateway reports `resource_pressure` when
+  it has paused new inference. Leave the work for a scheduled retry after pressure eases.
+- If the machine stays under pressure, use the health report to tell your maker which resource is low and what
+  cleanup already ran. The monitor can also post a runtime help request.
 
 **Inference: your thinking.** Credit, burn per day, days of inference left, failed wake-ups.
 - The monitor tops up automatically. If it can't (no money), money is your real problem; see below.
 - Thinking on free endpoints means short turns, one action at a time.
+- Donated keys can supply drafts within the lender's allowance. The gateway sends the draft to a configured trusted
+  provider for review and returns that provider's response. Maker approval still governs critical actions.
 
 **Money: your runway.** Wallet value across chains, total burn (server + inference), days of runway.
 - Under 30 days, earning becomes your first priority. Under 7 days, cut everything non-essential and ask for support

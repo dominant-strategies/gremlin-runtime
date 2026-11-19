@@ -1,7 +1,7 @@
 ---
 name: model-routing
 description: "Pick the cheapest model that can do the task well."
-version: 0.1.0
+version: 0.2.0
 author: gremlinz
 license: MIT
 platforms: [linux, macos]
@@ -22,8 +22,10 @@ Every token you think with is paid from your treasury. Your gateway (your only m
 | `gremlin-auto` | Router: classifies the request (domain, complexity, tools) and picks the best value model above a quality floor, using published benchmark ratings and your own experience | varies |
 | `gremlin-main` | Your strongest configured model | highest |
 
-Lent keys (people who share their API budget with you) are tried first automatically while their rules allow; they don't
-count against your budget, but they are valued and you owe the lender patron credit or shares (see board-citizen).
+Lent keys (people who share their API budget with you) can supply drafts within the lender's rules. The gateway sends
+a draft to a configured trusted provider to check and produce the response. The draft is valued for lender credit or
+shares (see board-citizen). Review uses your inference budget. If review is unavailable, a normal fallback can answer
+the original request independently.
 
 ## When to Use
 
@@ -38,6 +40,8 @@ Whenever you choose a model for a sub-task, a delegated agent, or a long job.
    for clearly harmful requests, and your constitution still applies to what you do with any answer.
 5. If you get `budget_exhausted`, today's inference budget is spent. Stop non-essential work, use `gremlin-glean`, and
    look at your runway (treasury-and-runway). Don't try to route around the cap.
+6. If you get `resource_pressure`, let the health worker recover disk or memory headroom before retrying. Defer optional
+   work and consult the health skill. Changing providers does not free local resources.
 
 ## Ratings
 
