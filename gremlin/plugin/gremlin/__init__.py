@@ -39,6 +39,17 @@ def _hardline(command: str) -> str | None:
 
 def _pre_tool_call(tool_name: str = "", args: dict | None = None, session_id: str = "", task_id: str = "", **_kwargs):
     session = _session(session_id, task_id)
+    if task_id.startswith("cron:a0a0a0a0a0a2:"):
+        if tool_name == "mcp__gremlin__health_status":
+            return None
+        if tool_name == "mcp__gremlin__inference_access" and (args or {}).get("action") in {
+            "status", "repair", "discover", "docs", "review_docs",
+        }:
+            return None
+    if task_id.startswith("cron:a0a0a0a0a0a3:") and tool_name.startswith("mcp__"):
+        if tool_name in {"mcp__gremlin__health_status", "mcp__gremlin__board_feed", "mcp__gremlin__board_read", "mcp__gremlin__report_issue"}:
+            return None
+        return {"action": "block", "message": "Optional maintenance can only read the board and record local issues."}
     verdict, reason = evaluate(tool_name, args, session, GRANTS, _hardline)
     if verdict == "block":
         return {"action": "block", "message": reason}

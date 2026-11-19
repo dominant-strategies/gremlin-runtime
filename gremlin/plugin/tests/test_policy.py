@@ -4,6 +4,7 @@ import sys
 import unittest
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
+from gremlin import _pre_tool_call  # noqa: E402
 from gremlin.policy import HELPER_USER, Grants, Session, WAKE_JOB_ID, decide, evaluate, subagent_args  # noqa: E402
 
 PRIMARY = Session(session_id=f"cron_{WAKE_JOB_ID}_20261012_120000", task_id=f"cron:{WAKE_JOB_ID}:e1", is_cron=True)
@@ -15,6 +16,23 @@ API = Session(session_id="api_1_abc", task_id="9b1e…", platform="api_server")
 NON_PRIMARY = (SUBAGENT, OTHER_JOB, API)
 os.environ["GREMLIN_PROTECTED_DIRS"] = "/var/lib/gremlin"
 os.environ["GREMLIN_SUBAGENT_ROOTS"] = "/var/lib/gremlin-hermes/work:/tmp"
+
+
+class EggMaintenanceJobs(unittest.TestCase):
+    def test_inference_recovery_can_repair_but_cannot_connect_a_provider_or_move_money(self):
+        task = "cron:a0a0a0a0a0a2:run"
+        self.assertIsNone(_pre_tool_call("mcp__gremlin__health_status", task_id=task))
+        for action in ("repair", "docs", "review_docs"):
+            self.assertIsNone(_pre_tool_call("mcp__gremlin__inference_access", {"action": action}, task_id=task))
+        self.assertEqual(_pre_tool_call("mcp__gremlin__inference_access", {"action": "connect"}, task_id=task)["action"], "block")
+        self.assertEqual(_pre_tool_call("mcp__gremlin__wallet_send", task_id=task)["action"], "block")
+
+    def test_optional_maintenance_can_read_and_report_locally(self):
+        task = "cron:a0a0a0a0a0a3:run"
+        for name in ("health_status", "board_feed", "board_read", "report_issue"):
+            self.assertIsNone(_pre_tool_call(f"mcp__gremlin__{name}", task_id=task))
+        for tool in ("mcp__gremlin__board_post", "mcp__gremlin__inference_access", "mcp__other__publish"):
+            self.assertEqual(_pre_tool_call(tool, task_id=task)["action"], "block")
 
 
 class PrimaryHasOverrideAuthority(unittest.TestCase):
